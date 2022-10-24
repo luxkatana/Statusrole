@@ -1,4 +1,17 @@
-
+import discord
+from discord.ext import commands
+import aiomysql
+bot = commands.Bot(command_prefix="./", intents=discord.Intents.all())
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user}")
+    bot.pool = await aiomysql.create_pool(
+        host="localhost",
+        user="root",
+        password="",
+        db=""
+    )
+    
 @bot.event
 async def on_presence_update(before: discord.Member, after: discord.Member) -> None:
     if before.status != after.status:
@@ -16,7 +29,8 @@ async def on_presence_update(before: discord.Member, after: discord.Member) -> N
     if data == False:
         return
         #
-    custom = list(filter(lambda j:isinstance(j, discord.CustomActivity), after.activities))
+    custom = list(filter(lambda
+                         j:isinstance(j, discord.CustomActivity), after.activities))
     if custom == []:
         ROLE = data["roleID"]
         channel = bot.get_channel(data["channelID"])
@@ -52,7 +66,7 @@ async def on_presence_update(before: discord.Member, after: discord.Member) -> N
             
             
 
-@bot.slash_command(name="statusrole")
+@bot.slash_command(name="statusrole", guild_ids=[941803156633956362])
 @discord.option(name="switch", description="Set on or off", required=True, choices=["on", "off"], type=str)
 @discord.option(name="statustext", description="the text of the status",type=str , required=False)
 @discord.option(name="logchannel", description="The channel to log each member", required=False, type=discord.TextChannel)
@@ -94,7 +108,7 @@ async def statusrole(
         if isinstance(validation, bool):
             await ctx.respond(embed=discord.Embed(title="Nope", description="It was never on...", colour=discord.Color.red()))
             return
-       async with bot.pool.acquire() as conn:
+        async with bot.pool.acquire() as conn:
             async with conn.cursor()as cursor:
                 cursor = await conn.cursor(aiomysql.DictCursor)
                 await cursor.execute(f"UPDATE statusrole SET listen = 0 WHERE guildID = %s", (ctx.guild_id,))
